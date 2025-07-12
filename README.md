@@ -1,4 +1,4 @@
-# ¡¡Hola, soy **Zay Campos**, bienvenido a mi perfil de Github!
+# ¡Hola, soy **Zay Campos**, bienvenido a mi perfil!
 
 ---
 [![Portfolio](https://raw.githubusercontent.com/zcampr/portfolio-psy/refs/heads/main/public/portfolio.webp)](https://iridescent-bavarois-0f8a8f.netlify.app/)
