@@ -1,13 +1,13 @@
 # ¡Bienvenido a mi Portfolio!
 
-¡Hola! Soy **Zay Campos**, Profesional en Recursos Humanos especializado en People Analytics. 
+¡Hola, soy **Zay Campos**!
 ---
 [![Portfolio](https://raw.githubusercontent.com/zcampr/portfolio-psy/refs/heads/main/public/portfolio.webp)](https://iridescent-bavarois-0f8a8f.netlify.app/)
 
 
 ## 🙋‍♀️ Sobre mí
 
-- 🎓 **Formación:** Estudios en Psicología Organizacional / RRHH. Especializado en People Analytics
+- 🎓 **Formación:** Profesional en Psicología Organizacional. Especializado en **People Analytics**.
 - 💼 **Experiencia:** 01 años manejando procesos de reclutamiento: elaboración de perfiles de puesto, entrevistas por competencias, elaboración de informes psicolaborales, analizando métricas de recursos humanos en el area de atracción de talento.
 - 🚀 **Propósito:** Mi objetivo profesional es analizar y optimizar procesos en Recursos Humanos para entender y predecir el comportamiento humano en las organizaciones mediante decisiones basadas en datos.
 
@@ -21,5 +21,5 @@
 
 ## 🌐 Tecnologías & Herramientas
 
-Excel • Power BI • Python for Data Analysis • Figma • Notion • Trello 
+Excel • Power BI • Python for Data Analysis • Notion • Trello
 ---
