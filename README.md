@@ -2,7 +2,7 @@
 
 ¡Hola! Soy **Zay Campos**, Profesional en Recursos Humanos especializado en People Analytics. 
 ---
-[![Portfolio](\public\portfolio.webp)](#)
+[![Portfolio](\public\portfolio.webp)](https://iridescent-bavarois-0f8a8f.netlify.app/)
 
 
 ## 🙋‍♀️ Sobre mí
