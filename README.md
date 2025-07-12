@@ -2,6 +2,8 @@
 
 ¡Hola! Soy **Zay Campos**, Profesional en Recursos Humanos especializado en People Analytics. 
 ---
+[![Portfolio](\public\portfolio.webp)](#)
+
 
 ## 🙋‍♀️ Sobre mí
 
