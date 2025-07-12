@@ -1,39 +1,27 @@
 ---
 import GitHub from "./icons/GitHub.astro"
-import NextJS from "./icons/NextJS.astro"
-import Tailwind from "./icons/Tailwind.astro"
 import Link from "./icons/Link.astro"
 import LinkButton from "./LinkButton.astro"
 
 const TAGS = {
-  NEXT: {
-    name: "Next.js",
-    class: "bg-black text-white",
-    icon: NextJS,
+  POWERBI: {
+    name: "PowerBi",
+    class: "bg-yellow-600 text-white font-semibold",
   },
-  TAILWIND: {
-    name: "Tailwind CSS",
-    class: "bg-[#003159] text-white",
-    icon: Tailwind,
+  EXCEL: {
+    name: "Ms Excel",
+    class: "bg-green-600 text-white font-semibold",
   },
 }
 const PROJECTS = [
   {
-    title: "SVGL - A beautiful library with SVG logos",
+    title: "PowerBI Report",
     description:
-      "Biblioteca de logos SVG de las marcas más populares. +10k visitas al mes. +2K svgs descargados. Creado desde cero con Next.js, React y Tailwind CSS.",
-    link: "https://svgl.vercel.app/",
-    github: "https://github.com/pheralb/svgl",
-    image: "/projects/svgl.webp",
-    tags: [TAGS.NEXT, TAGS.TAILWIND],
-  },
-  {
-    title: "AdventJS - Retos de programación con JavaScript y TypeScript",
-    description:
-      "Plataforma gratuita con retos de programación. Más de 1 millón de visitas en un mes. +50K retos completados. Creada desde cero con Next.js, React y Tailwind CSS.",
-    link: "https://adventjs.dev",
-    image: "/projects/adventjs.webp",
-    tags: [TAGS.NEXT, TAGS.TAILWIND],
+      "Dashboard interactivo de PowerBI de un departamento de ventas. Se realizo un proceso ETL (Extract, transform, load) para la limpieza y una visualización dinámica.",
+    link: "https://app.powerbi.com/view?r=eyJrIjoiNDJmNWU4YTQtYTVhYS00NDdlLTliODItZGYyZjI1MzI4YTAxIiwidCI6IjI5NjQxMTY5LTExODYtNDc2Mi1iYzI2LTRhOWY2NDg1ZmU4NSJ9&embedImagePlaceholder=true&pageName=ReportSection&classId=0c6428b8-3a07-4853-a9fa-bdc427356fc8&assignmentId=f25436d6-e95e-40cf-9691-437b5ec09567&submissionId=01ae2ab0-e59b-264f-a7af-0586e4e4c7b5",
+    github: "#",
+    image: "/projects/powerbi-project.webp",
+    tags: [TAGS.POWERBI, TAGS.EXCEL],
   },
 ]
 ---
@@ -44,7 +32,7 @@ const PROJECTS = [
     <article class="flex flex-col space-x-0 space-y-8 group md:flex-row md:space-x-8 md:space-y-0">
   <div class="w-full md:w-1/2">
     <div class="relative flex flex-col items-center col-span-6 row-span-5 gap-8 transition duration-500 ease-in-out transform shadow-xl overflow-clip rounded-xl sm:rounded-xl md:group-hover:-translate-y-1 md:group-hover:shadow-2xl lg:border lg:border-gray-800 lg:hover:border-gray-700 lg:hover:bg-gray-800/50">
-      <img alt="Recién llegado vs 5 años en Nueva Zelanda" class="object-cover object-top w-full h-56 transition duration-500 sm:h-full md:scale-110 md:group-hover:scale-105" loading="lazy" src={image} />
+      <img alt="Reporte de Business Intelligence" class="object-cover object-top w-full h-56 transition duration-500 sm:h-full md:scale-110 md:group-hover:scale-105" loading="lazy" src={image} />
     </div>
   </div>
 
@@ -59,7 +47,6 @@ const PROJECTS = [
               <span
                 class={`flex gap-x-2 rounded-full text-xs ${tag.class} py-1 px-2 `}
               >
-                <tag.icon class="size-4" />
                 {tag.name}
               </span>
             </li>

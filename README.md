@@ -1,27 +1,23 @@
-# 👨🏻‍💻 Porfolio para programadores y desarrolladores
+# ¡Bienvenido a mi Portfolio!
 
-<div align="center">
-<a href="https://porfolio.dev/">
-<img src="./public/porfolio.webp">
-</a>
-<p></p>
-</div>
+¡Hola! Soy **Zay Campos**, Profesional en Recursos Humanos especializado en People Analytics. 
+---
 
-<div align="center">
+## 🙋‍♀️ Sobre mí
 
-![Astro Badge](https://img.shields.io/badge/Astro-FF3E00?logo=astro&logoColor=fff&style=flat)
-![Tailwind CSS Badge](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=fff&style=flat)
-![GitHub stars](https://img.shields.io/github/stars/midudev/porfolio.dev)
-![GitHub PRs](https://img.shields.io/github/issues-pr/midudev/porfolio.dev)
-![GitHub forks](https://img.shields.io/github/forks/midudev/porfolio.dev)
-![GitHub issues](https://img.shields.io/github/issues/midudev/porfolio.dev)
+- 🎓 **Formación:** Estudios en Psicología Organizacional / RRHH. Especializado en People Analytics
+- 💼 **Experiencia:** 01 años manejando procesos de reclutamiento: elaboración de perfiles de puesto, entrevistas por competencias, elaboración de informes psicolaborales, analizando métricas de recursos humanos en el area de atracción de talento.
+- 🚀 **Propósito:** Mi objetivo profesional es analizar y optimizar procesos en Recursos Humanos para entender y predecir el comportamiento humano en las organizaciones mediante decisiones basadas en datos.
 
-</div>
+---
 
-## 🫂 Contribuidores
+## 🛠 Habilidades
 
-<a href="https://github.com/midudev/porfolio.dev/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=midudev/porfolio.dev" />
-</a>
+- **Estrategias de Atracción:** Employer Branding, campañas como recruiter en LinkedIn, headhunting.
+- **Evaluación de Talento:** Entrevistas por competencias, pruebas psicométricas, Assessment Centers.  
+- **Analítica y Reporting BI:** Métricas de tiempo de contratación, calidad de la contratación, tasa de abandono del cargo.
 
-<p></p>
+## 🌐 Tecnologías & Herramientas
+
+Excel • Power BI • Python for Data Analysis • Figma • Notion • Trello 
+---
