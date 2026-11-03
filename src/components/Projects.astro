@@ -12,8 +12,28 @@ const TAGS = {
     name: "Ms Excel",
     class: "bg-green-600 text-white font-semibold",
   },
+  PYTHON: {
+    name: "Python",
+    class: "bg-blue-600 text-white font-semibold",
+  },
+  ESTADISTICA: {
+    name: "Estadística",
+    class: "bg-purple-600 text-white font-semibold",
+  },
+  AB_TESTING: {
+    name: "A/B testing",
+    class: "bg-pink-600 text-white font-semibold",
+  },
 }
 const PROJECTS = [
+  {
+    title: "¿Funciona el curso de Excel?",
+    description:
+      "Evalué si un curso de Excel realmente mejora el desempeño de los colaboradores y si el hábito de estudio se mantiene después. Comparé a quienes hicieron el curso con un grupo que no lo hizo: el curso mejoró los resultados del examen, pero menos de lo esperado, y el hábito de estudio no se sostuvo. Se recomendó ajustar el curso antes de llevarlo a toda la empresa y combinarlo con microcápsulas de aprendizaje mediante los medios de comunicación de la empresa. Datos simulados de un caso real en Corporación Overall.",
+    github: "https://github.com/zcampr/evaluacion-curso-excel-",
+    image: "/projects/curso-excel.png",
+    tags: [TAGS.PYTHON, TAGS.ESTADISTICA, TAGS.AB_TESTING],
+  },
   {
     title: "PowerBI Report",
     description:
@@ -32,7 +52,7 @@ const PROJECTS = [
     <article class="flex flex-col space-x-0 space-y-8 group md:flex-row md:space-x-8 md:space-y-0">
   <div class="w-full md:w-1/2">
     <div class="relative flex flex-col items-center col-span-6 row-span-5 gap-8 transition duration-500 ease-in-out transform shadow-xl overflow-clip rounded-xl sm:rounded-xl md:group-hover:-translate-y-1 md:group-hover:shadow-2xl lg:border lg:border-gray-800 lg:hover:border-gray-700 lg:hover:bg-gray-800/50">
-      <img alt="Reporte de Business Intelligence" class="object-cover object-top w-full h-56 transition duration-500 sm:h-full md:scale-110 md:group-hover:scale-105" loading="lazy" src={image} />
+      <img alt={title} class="object-cover object-top w-full h-56 transition duration-500 sm:h-full md:scale-110 md:group-hover:scale-105" loading="lazy" src={image} />
     </div>
   </div>
 
