@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Rotación temprana en almacén</title>
+<meta name="description" content="Caso de negocio de People Analytics: rotación temprana de operarios de almacén en una empresa industrial.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@400..700&display=swap">
+<style>
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --ink: #141a24;
+  --muted: #5a6474;
+  --line: #dde1e8;
+  --soft: #eef1f5;
+  --accent: #1d49e0;
+  --accent-soft: #e8edfc;
+  --c-src: #8c96a8;
+  --c-model: #a9bbf6;
+  --c-live: #6f8ff2;
+  --c-ds: #141a24;
+  --font: "Google Sans Flex", "Google Sans", "Product Sans", Roboto, "Segoe UI", system-ui, sans-serif;
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --bar-h: 64px;
+  color-scheme: light;
+}
+html, body { height: 100%; margin: 0; }
+html { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 17px; line-height: 1.5; overflow: hidden; }
+.deck { position: relative; height: 100%; overflow: hidden; }
+
+/* ---------- slides ---------- */
+.slide {
+  position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px calc(var(--bar-h) + 32px + env(safe-area-inset-bottom, 0px));
+  opacity: 0; visibility: hidden; transform: translateX(40px) scale(.985);
+  transition: opacity .55s var(--ease), transform .55s var(--ease), visibility 0s linear .55s;
+}
+.slide.is-before { transform: translateX(-40px) scale(.985); }
+.slide.is-active { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.inner { max-width: 1120px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 28px; }
+.head { display: flex; flex-direction: column; gap: 12px; }
+
+.label { font-size: .82rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.4rem, 5.6vw, 4.4rem); line-height: 1.04; font-weight: 700; letter-spacing: -.03em; max-width: 20ch; }
+h2 { font-size: clamp(1.9rem, 3.8vw, 3rem); line-height: 1.08; font-weight: 650; letter-spacing: -.025em; }
+h3 { font-size: 1.1rem; font-weight: 600; letter-spacing: -.01em; }
+p { margin: 0; }
+.lead { color: var(--muted); font-size: clamp(1rem, 1.6vw, 1.15rem); max-width: 66ch; }
+.num { font-variant-numeric: tabular-nums; font-weight: 650; letter-spacing: -.03em; }
+.small { font-size: .86rem; color: var(--muted); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes growX { from { transform: scaleX(0); } }
+@keyframes popc { 0% { opacity: 0; transform: scale(.4); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.slide.is-active .a { animation: rise .7s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms + 120ms); }
+.slide.is-active .gx { animation: growX 1s var(--ease) both; animation-delay: calc(var(--i, 0) * 120ms + 300ms); transform-origin: left center; }
+.slide.is-active .pc { animation: popc .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 30ms + 450ms); transform-box: fill-box; transform-origin: center; }
+.slide.is-active .ln { animation: draw 1.2s var(--ease) both; animation-delay: calc(var(--i, 0) * 200ms + 300ms); }
+
+/* ---------- cover ---------- */
+.facts { display: grid; border-top: 1px solid var(--line); margin: 0; max-width: 720px; }
+.facts div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; text-align: right; }
+
+/* ---------- layout helpers ---------- */
+.detail { display: grid; grid-template-columns: 1.55fr 1fr; gap: 32px; align-items: start; }
+.detail.mid { align-items: center; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); }
+.steps li { display: grid; grid-template-columns: 130px 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.steps .when { font-size: .88rem; font-weight: 600; color: var(--accent); }
+.steps p { color: var(--muted); font-size: .95rem; margin-top: 2px; }
+.steps.ic { max-width: 900px; }
+.steps.ic li { grid-template-columns: 210px 1fr; align-items: center; padding: 16px 0; }
+.steps.ic .when { display: flex; align-items: center; gap: 12px; font-size: .92rem; }
+.ico { width: 40px; height: 40px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+.ico svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.deliver { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.deliver .k { font-size: .82rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.deliver .big { font-size: clamp(2.8rem, 5vw, 3.8rem); line-height: 1; color: var(--accent); }
+.deliver p { color: var(--muted); }
+.deliver .date { display: flex; justify-content: space-between; gap: 12px; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line); font-size: .92rem; }
+.deliver .date b { font-weight: 600; text-align: right; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: .88rem; background: var(--surface); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.chip.off { color: var(--muted); background: var(--soft); border-color: var(--soft); }
+.note { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; max-width: 80ch; color: var(--muted); font-size: .95rem; }
+.note b { color: var(--ink); font-weight: 600; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px 16px; min-width: 0; }
+
+/* ---------- charts ---------- */
+.chart { display: block; width: 100%; height: auto; font-family: var(--font); overflow: visible; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .axis { stroke: var(--c-src); stroke-width: 1; }
+.chart .tick { fill: var(--muted); font-size: 12px; }
+.chart .ttl { fill: var(--muted); font-size: 12px; }
+.chart .s24 { fill: none; stroke: var(--c-src); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; }
+.chart .s25 { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; stroke-dasharray: 1; }
+.chart .d24 { fill: var(--surface); stroke: var(--c-src); stroke-width: 2; }
+.chart .d25 { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.chart .end { font-size: 13px; font-weight: 650; }
+.chart .avg { stroke-width: 1.4; stroke-dasharray: 5 5; }
+.chart .pt { fill: var(--accent); fill-opacity: .85; stroke: var(--surface); stroke-width: 1.5; }
+.chart .fit { stroke: var(--c-src); stroke-width: 1.6; stroke-dasharray: 6 6; fill: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 18px; color: var(--muted); font-size: .86rem; margin-top: 8px; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 16px; height: 4px; border-radius: 2px; display: inline-block; }
+
+.hb { display: grid; gap: 10px; }
+.hb-row { display: grid; grid-template-columns: 120px 1fr 48px; align-items: center; gap: 12px; font-size: .92rem; }
+.hb-l { color: var(--muted); }
+.hb-t { height: 18px; background: var(--soft); border-radius: 5px; overflow: hidden; }
+.hb-t i { display: block; height: 100%; background: var(--c-model); border-radius: 5px; }
+.hb-row.hi .hb-l { color: var(--ink); font-weight: 600; }
+.hb-row.hi .hb-t i { background: var(--accent); }
+.hb-v { text-align: right; font-size: .95rem; letter-spacing: 0; }
+.hb-row.hi .hb-v { color: var(--accent); }
+
+/* ---------- objective-style cards ---------- */
+.objs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.objs.four { grid-template-columns: repeat(4, 1fr); }
+#trend svg { max-height: 42vh; }
+#scatter svg { max-height: 46vh; }
+.obj { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; display: grid; grid-template-columns: 6px 1fr; gap: 18px; min-width: 0; }
+.obj .stripe { border-radius: 3px; }
+.obj > div:last-child { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.obj .area { font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.obj p.d { color: var(--muted); font-size: .95rem; }
+.obj .goal { font-size: .92rem; padding-top: 10px; border-top: 1px solid var(--line); margin-top: auto; color: var(--muted); }
+.obj .goal b { font-weight: 600; color: var(--ink); }
+.list { list-style: none; margin: 0; padding: 0; display: grid; }
+.list li { padding: 8px 0; border-top: 1px solid var(--line); font-size: .95rem; }
+.list li:first-child { border-top: 0; padding-top: 2px; }
+.list li small { display: block; color: var(--muted); font-size: .86rem; }
+
+/* ---------- split ---------- */
+.split { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--surface); }
+.split > div { padding: 20px 24px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.split > div + div { border-left: 1px solid var(--line); background: var(--accent-soft); }
+.split .k { font-size: .8rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.split > div + div .k { color: var(--accent); }
+
+/* ---------- phases ---------- */
+.phases { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px 20px 22px; }
+.ph-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 18px; }
+.ph-track i { display: block; height: 8px; border-radius: 4px; }
+.ph-cols { display: grid; grid-template-columns: repeat(4, 1fr); }
+.ph { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; min-width: 0; }
+.ph:first-child { padding-left: 0; }
+.ph:last-child { padding-right: 0; }
+.ph + .ph { border-left: 1px solid var(--line); }
+.ph .n { font-size: 2.2rem; line-height: 1; color: var(--accent); }
+.ph .tag { font-size: .74rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.ph .tag .sw { width: 8px; height: 8px; border-radius: 2px; }
+.ph p { color: var(--muted); font-size: .92rem; }
+.ph .chips { gap: 6px; margin-top: auto; }
+.ph .chip { font-size: .8rem; padding: 3px 10px; }
+
+/* ---------- hero number ---------- */
+.hero-num { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; color: var(--accent); }
+.hero-num .num { font-size: clamp(5rem, 13vw, 9.5rem); line-height: .9; font-weight: 700; letter-spacing: -.05em; }
+.hero-num .u { font-size: clamp(1.4rem, 3vw, 2.2rem); font-weight: 650; letter-spacing: -.02em; }
+.hero-num.sm .num { font-size: clamp(3.6rem, 8vw, 6rem); }
+.hero-num.sm .u { font-size: clamp(1.2rem, 2.4vw, 1.7rem); }
+
+/* ---------- model table ---------- */
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 6px 24px; }
+.kpi-row { display: grid; grid-template-columns: minmax(170px, .9fr) minmax(200px, 1.2fr) 90px 1.6fr; gap: 24px; padding: 14px 0; align-items: center; }
+.kpi-row + .kpi-row { border-top: 1px solid var(--line); }
+.kpi-hd { font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 12px 0 10px; }
+.kpi-n { font-weight: 600; display: flex; align-items: center; gap: 10px; }
+.kpi-n .chip { font-size: .72rem; padding: 2px 8px; }
+.kpi-d { color: var(--muted); font-size: .92rem; }
+.auc { display: grid; grid-template-columns: 1fr 48px; gap: 10px; align-items: center; }
+.auc .hb-t { height: 12px; position: relative; overflow: visible; }
+.auc .hb-t i { background: var(--c-model); }
+.auc .hb-t b { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--c-src); left: 50%; }
+.kpi-row.best .auc .hb-t i { background: var(--accent); }
+.kpi-row.best .auc .num { color: var(--accent); }
+
+/* ---------- approve / flow ---------- */
+.approve { display: flex; align-items: center; gap: 18px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 16px; padding: 18px 24px; }
+.approve .ico { background: var(--accent); color: #fff; width: 44px; height: 44px; }
+.approve .k { font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.approve h3 { font-size: 1.25rem; margin: 2px 0; }
+.approve p { color: var(--muted); font-size: .95rem; }
+.then { display: flex; align-items: center; gap: 10px; font-size: .82rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin: -10px 0 -10px 24px; }
+.then svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.flow .chip { font-size: .95rem; padding: 7px 14px; }
+.flow .arr { color: var(--c-src); }
+
+/* ---------- control bar ---------- */
+.bar-ui {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.bar-in { max-width: 1120px; margin: 0 auto; height: var(--bar-h); display: flex; align-items: center; gap: 16px; }
+.dots { display: flex; gap: 6px; flex: 1 1 auto; min-width: 0; }
+.dot-btn { all: unset; cursor: pointer; height: 32px; display: flex; align-items: center; flex: 1 1 0; min-width: 12px; }
+.dot-btn span { display: block; width: 100%; height: 4px; border-radius: 2px; background: var(--line); transition: background .3s; }
+.dot-btn.on span { background: var(--accent); }
+.dot-btn:hover span { background: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.dot-btn:focus-visible span { outline: 2px solid var(--accent); outline-offset: 3px; }
+.name { font-size: .88rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 0 1 260px; }
+.count { font-size: .88rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.btns { display: flex; gap: 6px; }
+.btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; font: inherit; }
+.btn:hover { border-color: var(--ink); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn:disabled { opacity: .35; cursor: default; border-color: var(--line); }
+.btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 960px) {
+  .ph-cols { grid-template-columns: 1fr; }
+  .ph-track { display: none; }
+  .ph, .ph:first-child, .ph:last-child { padding: 14px 0; }
+  .ph + .ph { border-left: 0; border-top: 1px solid var(--line); }
+  .ph .n { font-size: 1.8rem; }
+  .kpi-row { grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+  .kpi-hd { display: none; }
+  .kpi-row .kpi-n, .kpi-row .kpi-d { grid-column: 1 / -1; }
+  .kpi-row .pr::before { content: "AUC-PR "; color: var(--muted); font-weight: 400; font-size: .85rem; }
+}
+@media (max-width: 1100px) { .objs.four { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) {
+  .detail { grid-template-columns: 1fr; }
+  .objs.four { grid-template-columns: 1fr; }
+  .objs { grid-template-columns: 1fr; }
+  .split { grid-template-columns: 1fr; }
+  .split > div + div { border-left: 0; border-top: 1px solid var(--line); }
+}
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .slide { padding-top: 28px; }
+  .steps li, .steps.ic li { grid-template-columns: 1fr; gap: 6px; }
+  .name { display: none; }
+  .dots { gap: 4px; }
+  .dot-btn { min-width: 4px; }
+  .bar-in { gap: 12px; }
+  .facts div { flex-direction: column; gap: 2px; }
+  .facts dd { text-align: left; }
+  .hb-row { grid-template-columns: 92px 1fr 44px; gap: 8px; }
+  .chart .tick, .chart .ttl { font-size: 21px; }
+  .chart .end, .chart .yt { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide { transition: none; transform: none; }
+  .slide.is-active .a, .slide.is-active .gx, .slide.is-active .pc, .slide.is-active .ln { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<main class="deck" id="deck">
+
+  <!-- 1 · Portada -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Portada">
+    <div class="inner">
+      <div class="label a" style="--i:0">Proyecto ESAN · People Analytics</div>
+      <h1 class="a" style="--i:1">Rotación temprana en operarios de almacén de una empresa industrial</h1>
+      <p class="lead a" style="--i:2">Objetivo: diseñar estrategias de retención que aseguren la continuidad operativa.</p>
+    </div>
+  </section>
+
+  <!-- 2 · Tendencia -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="La rotación sube">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">El problema</div>
+        <div class="hero-num sm a" style="--i:1"><span class="num">+3</span><span class="u">puntos porcentuales</span></div>
+        <h2 class="a" style="--i:1">subió la rotación mensual promedio en 2025</h2>
+        <p class="lead a" style="--i:2">El promedio pasó de 12 % en 2024 a 15 % entre enero y octubre de 2025.</p>
+      </div>
+      <div class="card a" style="--i:3">
+        <div id="trend"></div>
+        <div class="legend">
+          <span><i style="background:var(--accent)"></i>2025 (enero a octubre)</span>
+          <span><i style="background:var(--c-src)"></i>2024</span>
+          <span><i style="background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)"></i>Promedio del año</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · 54 % -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Cuándo ocurren los ceses">
+    <div class="inner">
+      <div class="detail mid">
+        <div class="head">
+          <div class="label a" style="--i:0">Cuándo se van</div>
+          <div class="hero-num a" style="--i:1"><span class="num">54 %</span></div>
+          <h2 class="a" style="--i:1">de los ceses ocurre en el primer mes de trabajo</h2>
+          <p class="lead a" style="--i:2">Es una alerta temprana para la gestión del talento: el riesgo se concentra en el ingreso y en la inducción.</p>
+        </div>
+        <div class="card a" style="--i:3">
+          <div class="small" style="margin-bottom:12px">Porcentaje de ceses según tiempo de vínculo laboral</div>
+          <div class="hb" id="tenure"></div>
+          <p class="small" style="margin-top:12px">Por redondeo, los porcentajes suman 99 %.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Horas extras -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Rotación y horas extras">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">El costo asociado</div>
+        <h2 class="a" style="--i:1">Los meses con más rotación tienden a tener más gasto en horas extras</h2>
+        <p class="lead a" style="--i:2">Cuando sube el porcentaje de personas que se van, también tiende a subir el pago de horas extras al resto del equipo.</p>
+      </div>
+      <div class="detail mid">
+        <div class="card a" style="--i:3"><div id="scatter"></div></div>
+        <div class="deliver a" style="--i:4">
+          <span class="k">Correlación</span>
+          <span class="big num" id="rval">r ≈ 0.94</span>
+          <p>Calculada con los 18 puntos del gráfico.</p>
+          <div class="date"><span>Lectura</span><b>Asociación, no causa</b></div>
+          <p class="small">Que la rotación genere las horas extras es la hipótesis del modelo conceptual; este gráfico no la prueba por sí solo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Modelo conceptual -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Modelo conceptual">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">Modelo conceptual</div>
+        <h2 class="a" style="--i:1">Cuatro familias de razones explican la rotación temprana</h2>
+      </div>
+      <div class="objs four">
+        <div class="obj a" style="--i:2"><span class="stripe" style="background:var(--accent)"></span><div><span class="area">Organizacionales</span>
+          <ul class="list"><li>Falta de inducción</li><li>Expectativas no alineadas</li><li>Mala gestión del liderazgo</li></ul></div></div>
+        <div class="obj a" style="--i:3"><span class="stripe" style="background:var(--c-live)"></span><div><span class="area">Personales o individuales</span>
+          <ul class="list"><li>Incompatibilidad con el trabajo</li><li>Problemas de transporte</li><li>Falta de motivación</li><li>Perfil específico</li></ul></div></div>
+        <div class="obj a" style="--i:4"><span class="stripe" style="background:var(--c-model)"></span><div><span class="area">Económicas</span>
+          <ul class="list"><li>Salario poco competitivo</li><li>Falta de beneficios adicionales</li></ul></div></div>
+        <div class="obj a" style="--i:5"><span class="stripe" style="background:var(--c-src)"></span><div><span class="area">Seguridad y salud</span>
+          <ul class="list"><li>Condiciones físicas exigentes</li><li>Falta de equipos de protección</li></ul></div></div>
+      </div>
+      <div class="then a" style="--i:6"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v15M6 13l6 6 6-6"/></svg>Consecuencia</div>
+      <div class="approve a" style="--i:7">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div><span class="k">Rotación temprana</span><h3>Más horas extras para cubrir los puestos vacíos</h3></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Enfoque y cronograma -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Cómo lo abordamos">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">Cómo lo abordamos</div>
+        <h2 class="a" style="--i:1">Un modelo predictivo para encontrar los factores de la rotación temprana</h2>
+        <p class="lead a" style="--i:2">La idea era identificar los principales factores y convertirlos en acciones concretas. Lo organizamos en diez semanas.</p>
+      </div>
+      <div class="phases a" style="--i:3">
+        <div class="ph-track" aria-hidden="true">
+          <i class="gx" style="--i:0;background:var(--c-src)"></i>
+          <i class="gx" style="--i:1;background:var(--c-model)"></i>
+          <i class="gx" style="--i:2;background:var(--c-live)"></i>
+          <i class="gx" style="--i:3;background:var(--accent)"></i>
+        </div>
+        <div class="ph-cols">
+          <div class="ph">
+            <span class="n num">1–4</span>
+            <span class="tag"><span class="sw" style="background:var(--c-src)"></span>Semanas</span>
+            <h3>Recolección y limpieza de datos</h3>
+            <p>Unificar los registros de ingresos y ceses, y corregir duplicados, fechas y catálogos.</p>
+          </div>
+          <div class="ph">
+            <span class="n num">5–6</span>
+            <span class="tag"><span class="sw" style="background:var(--c-model)"></span>Semanas</span>
+            <h3>Análisis exploratorio</h3>
+            <p>Identificar patrones de rotación por mes y por tiempo de vínculo.</p>
+          </div>
+          <div class="ph">
+            <span class="n num">7–8</span>
+            <span class="tag"><span class="sw" style="background:var(--c-live)"></span>Semanas</span>
+            <h3>Modelo predictivo</h3>
+            <p>Desarrollar y validar el modelo comparando tres algoritmos.</p>
+          </div>
+          <div class="ph">
+            <span class="n num">9–10</span>
+            <span class="tag"><span class="sw" style="background:var(--accent)"></span>Semanas</span>
+            <h3>Resultados y plan</h3>
+            <p>Presentar los resultados y el plan de implementación a la Gerencia de Operaciones.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Riesgos y complejidades -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Riesgos y complejidades">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">Antes de modelar</div>
+        <h2 class="a" style="--i:1">Riesgos y complejidades de los datos</h2>
+        <p class="lead a" style="--i:2">Gran parte del trabajo fue dejar una base confiable antes de analizarla.</p>
+      </div>
+      <div class="split a" style="--i:3">
+        <div>
+          <span class="k">Riesgos</span>
+          <ul class="list">
+            <li>Calidad de datos heterogénea<small>Registros duplicados, fechas invertidas y catálogos de “motivo de cese” desordenados.</small></li>
+            <li>Ceses masivos<small>Salidas por término de proyectos o servicios, que no responden a las mismas causas.</small></li>
+          </ul>
+        </div>
+        <div>
+          <span class="k">Complejidades</span>
+          <ul class="list">
+            <li>Estacionalidad operativa<small>Los picos por campaña elevan la rotación y las horas extras.</small></li>
+            <li>Acceso incompleto a datos</li>
+            <li>Factores organizacionales<small>Liderazgo, cultura y carga de trabajo.</small></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · Modelos -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Modelos comparados">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">Resultados del modelo</div>
+        <h2 class="a" style="--i:1">Comparamos tres modelos y elegimos la regresión logística</h2>
+        <p class="lead a" style="--i:2">Tuvo el mejor desempeño y es la más fácil de explicar: muestra qué factores aumentan o reducen el riesgo de salida.</p>
+      </div>
+      <div class="kpi a" style="--i:3">
+        <div class="kpi-row kpi-hd"><span>Modelo</span><span>AUC-ROC</span><span>AUC-PR</span><span>Comentario</span></div>
+        <div class="kpi-row best a" style="--i:4"><span class="kpi-n">Regresión logística <span class="chip on">Elegido</span></span>
+          <span class="auc"><span class="hb-t"><i class="gx" style="--i:1;width:71%"></i><b></b></span><span class="num">0.71</span></span>
+          <span class="num pr">0.50</span>
+          <span class="kpi-d">Interpretable, con buen equilibrio entre precisión y sensibilidad. Ideal para comunicar factores de riesgo.</span></div>
+        <div class="kpi-row a" style="--i:5"><span class="kpi-n">Random Forest</span>
+          <span class="auc"><span class="hb-t"><i class="gx" style="--i:2;width:66%"></i><b></b></span><span class="num">0.66</span></span>
+          <span class="num pr">0.49</span>
+          <span class="kpi-d">Menor capacidad predictiva, pero permite ver interacciones no lineales entre variables.</span></div>
+        <div class="kpi-row a" style="--i:6"><span class="kpi-n">Gradient Boosting</span>
+          <span class="auc"><span class="hb-t"><i class="gx" style="--i:3;width:69%"></i><b></b></span><span class="num">0.69</span></span>
+          <span class="num pr">0.45</span>
+          <span class="kpi-d">Similar al Random Forest, algo mejor en sensibilidad (recall). Tiende a sobreajustar con pocos datos.</span></div>
+      </div>
+      <p class="note a" style="--i:7">En el AUC-ROC, <b>0.5 equivale al azar</b> (la línea gris) y 1 a una clasificación perfecta. Un valor de 0.71 indica una capacidad predictiva moderada: el modelo sirve para <b>identificar factores asociados</b> a la salida, no para decidir sobre una persona en particular. Los valores son aproximados.</p>
+    </div>
+  </section>
+
+  <!-- 9 · Perfil -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Perfil asociado a la permanencia">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">Hallazgo</div>
+        <h2 class="a" style="--i:1">Qué características se asociaron a una mayor permanencia</h2>
+        <p class="lead a" style="--i:2">Son puntos de referencia, no filtros. No buscan excluir, sino orientar, y se complementan con las competencias, las fortalezas y la motivación de cada persona.</p>
+      </div>
+      <div class="objs">
+        <div class="obj a" style="--i:3"><span class="stripe" style="background:var(--accent)"></span><div><span class="area">Relacionadas con el puesto</span>
+          <ul class="list">
+            <li>Nivel educativo<small>Secundaria completa con experiencia previa, o formación técnica con orientación práctica.</small></li>
+            <li>Experiencia en el sector<small>Trabajo previo en zonas logísticas o industriales.</small></li>
+          </ul>
+          <p class="goal"><b>Uso:</b> pueden orientar la entrevista por competencias.</p></div></div>
+        <div class="obj a" style="--i:4"><span class="stripe" style="background:var(--c-src)"></span><div><span class="area">Personales</span>
+          <ul class="list">
+            <li>Edad<small>25 años a más.</small></li>
+            <li>Estado civil<small>Personas casadas o con compromisos familiares.</small></li>
+            <li>Lugar de residencia<small>Cerca del centro de trabajo (Lima/Callao).</small></li>
+          </ul>
+          <p class="goal"><b>Uso:</b> no se usan para seleccionar. Orientan la inducción, el transporte y el acompañamiento.</p></div></div>
+      </div>
+      <p class="note a" style="--i:5">La <b>Ley 26772</b> prohíbe requisitos de empleo que discriminen, entre otros motivos, por edad, estado civil o condición económica. Estas variables pueden reflejar otros factores, como la estabilidad o el tiempo de traslado, y por eso se usan para diseñar apoyos, no para descartar candidatos.</p>
+    </div>
+  </section>
+
+  <!-- 10 · Propuesta -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Qué proponemos">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">La propuesta</div>
+        <h2 class="a" style="--i:1">Seleccionar mejor y acompañar el primer mes</h2>
+        <p class="lead a" style="--i:2">Como la mayoría de los ceses ocurre al inicio, las acciones se concentran en el ingreso.</p>
+      </div>
+      <div class="objs">
+        <div class="obj a" style="--i:3"><span class="stripe" style="background:var(--accent)"></span><div><span class="area">1 · Rediseño de la selección</span>
+          <ul class="list">
+            <li>Entrevista estructurada por competencias</li>
+            <li>Assessment conductual</li>
+            <li>Preview realista del puesto</li>
+          </ul>
+          <p class="goal">El candidato entiende mejor el rol, la empresa evalúa lo que realmente importa y se cuida el ajuste conductual.</p></div></div>
+        <div class="obj a" style="--i:4"><span class="stripe" style="background:var(--c-live)"></span><div><span class="area">2 · Un mentor con experiencia</span>
+          <ul class="list">
+            <li>Facilita la integración de los nuevos operarios</li>
+            <li>Reduce la curva de aprendizaje y los errores operativos</li>
+            <li>Fortalece el sentido de pertenencia</li>
+            <li>Transfiere conocimiento práctico del entorno industrial</li>
+          </ul></div></div>
+      </div>
+      <p class="note a" style="--i:5"><b>Referencia externa:</b> HighMatch, un proveedor de evaluaciones de selección, publica el caso de Lipari Foods, que redujo 72 % su rotación temprana tras incorporar su evaluación previa al ingreso.</p>
+    </div>
+  </section>
+
+  <!-- 11 · Valor esperado -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Valor esperado">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">Valor esperado</div>
+        <h2 class="a" style="--i:1">Cuánto se podría ahorrar si la rotación baja de 15 % a 10 %</h2>
+      </div>
+      <div class="detail mid">
+        <ul class="steps a" style="--i:2">
+          <li><span class="when">Premisas</span><div><h3>Mismo volumen y mismos costos</h3><p>Se mantienen el número de ingresos al año y los costos de contratación.</p></div></li>
+          <li><span class="when">Meta</span><div><h3>Rotación mensual de 15 % a 10 %</h3><p>15 % es el promedio mensual de 2025.</p></div></li>
+          <li><span class="when">Ahorro 1</span><div><h3>Costos operativos</h3><p>Horas de reclutamiento y equipos de protección personal (EPP) de cada operario que se pierde.</p></div></li>
+          <li><span class="when">Ahorro 2</span><div><h3>Horas extras</h3><p>Menos horas extras para cubrir los puestos vacíos.</p></div></li>
+        </ul>
+        <div class="deliver a" style="--i:3">
+          <span class="k">Eficiencia anual estimada</span>
+          <span class="big num">≈ S/ 32 mil</span>
+          <p>Es una estimación bajo las premisas indicadas, no un ahorro logrado.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · Diagnóstico funcional -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Qué se necesita para implementarlo">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">Diagnóstico funcional</div>
+        <h2 class="a" style="--i:1">Qué se necesita para implementarlo</h2>
+      </div>
+      <ul class="steps ic">
+        <li class="a" style="--i:2"><span class="when"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span>Acceso a datos</span><div><h3>Habilitar la información de ingresos y ceses</h3><p>Permite definir perfiles de competencias con estadística predictiva.</p></div></li>
+        <li class="a" style="--i:3"><span class="when"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20v-1a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v1M15.5 14.2A4 4 0 0 1 21 18v1"/></svg></span>Gestión del cambio</span><div><h3>Trabajar con los supervisores</h3><p>Reducir su resistencia para que adopten el nuevo proceso.</p></div></li>
+        <li class="a" style="--i:4"><span class="when"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg></span>Implementación</span><div><h3>Superar las barreras operativas</h3><p>Con acceso oportuno a los datos y una gestión interna adecuada.</p></div></li>
+      </ul>
+      <div class="a" style="--i:5">
+        <div class="small" style="margin-bottom:10px">Procesos involucrados</div>
+        <div class="flow"><span class="chip">Recepción y filtro</span><span class="arr">→</span><span class="chip">Selección</span><span class="arr">→</span><span class="chip">Contratación</span><span class="arr">→</span><span class="chip">Inducción</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 · Siguientes pasos -->
+  <section class="slide" aria-roledescription="diapositiva" aria-label="Siguientes pasos">
+    <div class="inner">
+      <div class="head">
+        <div class="label a" style="--i:0">Siguientes pasos</div>
+        <h2 class="a" style="--i:1">Probarlo primero en un piloto con grupo control</h2>
+        <p class="lead a" style="--i:2">Un grupo de ingresos sigue el proceso nuevo y otro el actual. Así se puede medir si la propuesta reduce la rotación.</p>
+      </div>
+      <div class="phases a" style="--i:3">
+        <div class="ph-track" aria-hidden="true">
+          <i class="gx" style="--i:0;background:var(--accent)"></i>
+          <i class="gx" style="--i:1;background:var(--c-live)"></i>
+          <i class="gx" style="--i:2;background:var(--c-model)"></i>
+          <i class="gx" style="--i:3;background:var(--c-ds)"></i>
+        </div>
+        <div class="ph-cols">
+          <div class="ph"><span class="n num">1</span><span class="tag"><span class="sw" style="background:var(--accent)"></span>Piloto</span><h3>Aplicar la propuesta</h3><p>Usar el proceso rediseñado en el grupo piloto y mantener el actual en el grupo control.</p></div>
+          <div class="ph"><span class="n num">2</span><span class="tag"><span class="sw" style="background:var(--c-live)"></span>Medición</span><h3>Monitorear y evaluar</h3><p>Seguir las mismas métricas en ambos grupos. ¿Se redujo la rotación? ¿Se tomaron mejores decisiones?</p></div>
+          <div class="ph"><span class="n num">3</span><span class="tag"><span class="sw" style="background:var(--c-model)"></span>Revisión</span><h3>Ajustes y aprendizajes</h3><p>Identificar errores, sesgos o limitaciones, ajustar el modelo o la estrategia y documentar lo aprendido.</p></div>
+          <div class="ph"><span class="n num">4</span><span class="tag"><span class="sw" style="background:var(--c-ds)"></span>Decisión</span><h3>Escalar o cerrar</h3><p>Si el piloto funciona, se amplía. Si no, se replantea la hipótesis o se rediseña la solución.</p></div>
+        </div>
+      </div>
+      <div class="approve a" style="--i:4">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+        <div><span class="k">Estado</span><h3>Propuesta presentada; el piloto no se ejecutó</h3></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="bar-ui" aria-label="Controles de la presentación">
+  <div class="bar-in">
+    <span class="name" id="slideName">Portada</span>
+    <div class="dots" id="dots"></div>
+    <span class="count" id="count" aria-live="polite">1 / 13</span>
+    <div class="btns">
+      <button class="btn" id="prev" type="button" aria-label="Diapositiva anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button class="btn" id="next" type="button" aria-label="Diapositiva siguiente"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button class="btn" id="fs" type="button" aria-label="Pantalla completa" hidden><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+  </div>
+</nav>
+
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
+  const sv = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; };
+  const tx = (parent, x, y, s, cls, anchor) => { const t = sv('text', { x, y, class: cls, 'text-anchor': anchor || 'start' }, parent); t.textContent = s; return t; };
+
+  /* ---------- Datos tomados de los gráficos de la presentación original ---------- */
+  const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const R2024 = [16, 14, 6, 10, 17, 14, 14, 7, 14, 9, 11, 7];
+  const R2025 = [18, 14, 13, 12, 18, 16, 15, 11, 16, 12];
+  const TENURE = [['0–1 mes', 54], ['1–2 meses', 15], ['2–3 meses', 9], ['3–4 meses', 4], ['4–6 meses', 5], ['6 meses–1 año', 9], ['Más de 1 año', 3]];
+  const OVERTIME = [[1830, 6], [2580, 7], [3450, 9], [3680, 10], [3680, 7], [3880, 11], [4130, 10], [4870, 14], [5260, 14], [5340, 13], [5390, 11], [5510, 13], [6490, 20], [6880, 14], [7280, 17], [7340, 17], [7770, 21], [10770, 24]];
+
+  /* ---------- tendencia mensual ---------- */
+  (function trend() {
+    const W = 760, H = 300, L = 44, R = 70, T = 14, B = 34;
+    const svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart', role: 'img', 'aria-label': 'Tasa de rotación mensual. 2024: promedio 12 %. 2025, de enero a octubre: promedio 15 %.' });
+    const x = i => L + i * (W - L - R) / 11, y = v => T + (25 - v) * (H - T - B) / 25;
+    [0, 5, 10, 15, 20, 25].forEach(v => { sv('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), class: 'grid' }, svg); tx(svg, L - 10, y(v) + 4, v + ' %', 'tick', 'end'); });
+    MESES.forEach((m, i) => tx(svg, x(i), H - 10, m, 'tick', 'middle'));
+    const mean = a => a.reduce((s, v) => s + v, 0) / a.length;
+    [[R2024, 'var(--c-src)', 12], [R2025, 'var(--accent)', 15]].forEach(([d, c, lab]) => {
+      const n = d.length - 1, my = y(mean(d));
+      sv('line', { x1: L, x2: x(n), y1: my, y2: my, class: 'avg', stroke: c }, svg);
+    });
+    const path = d => d.map((v, i) => (i ? 'L' : 'M') + x(i) + ' ' + y(v)).join(' ');
+    const p24 = sv('path', { d: path(R2024), class: 's24 ln', pathLength: 1 }, svg); p24.style.setProperty('--i', 0);
+    const p25 = sv('path', { d: path(R2025), class: 's25 ln', pathLength: 1 }, svg); p25.style.setProperty('--i', 1);
+    R2024.forEach((v, i) => { const c = sv('circle', { cx: x(i), cy: y(v), r: 3.5, class: 'd24 pc' }, svg); c.style.setProperty('--i', i); sv('title', {}, c).textContent = `${MESES[i]} 2024: ${v} %`; });
+    R2025.forEach((v, i) => { const c = sv('circle', { cx: x(i), cy: y(v), r: 4.5, class: 'd25 pc' }, svg); c.style.setProperty('--i', i + 12); sv('title', {}, c).textContent = `${MESES[i]} 2025: ${v} %`; });
+    const e25 = tx(svg, x(9) + 10, y(15) + 4, 'Prom. 15 %', 'end', 'start'); e25.setAttribute('fill', 'var(--accent)');
+    const e24 = tx(svg, x(11) + 8, y(12) + 4, 'Prom. 12 %', 'end', 'start'); e24.setAttribute('fill', 'var(--muted)');
+    document.getElementById('trend').appendChild(svg);
+  })();
+
+  /* ---------- ceses por tiempo de vínculo ---------- */
+  (function tenure() {
+    const box = document.getElementById('tenure');
+    TENURE.forEach(([l, v], k) => {
+      const row = el('div', 'hb-row' + (k === 0 ? ' hi' : ''));
+      row.innerHTML = `<span class="hb-l">${l}</span><span class="hb-t"><i class="gx" style="--i:${k};width:${(v / 54 * 100).toFixed(1)}%"></i></span><span class="hb-v num">${v} %</span>`;
+      box.appendChild(row);
+    });
+  })();
+
+  /* ---------- horas extras vs. rotación ---------- */
+  (function scatter() {
+    const W = 640, H = 330, L = 52, R = 16, T = 12, B = 52;
+    const svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, class: 'chart', role: 'img', 'aria-label': 'Dispersión de 18 meses: costo por horas extra frente a tasa de rotación mensual, con tendencia ascendente.' });
+    const x = v => L + v * (W - L - R) / 12000, y = v => T + (25 - v) * (H - T - B) / 25;
+    [0, 5, 10, 15, 20, 25].forEach(v => { sv('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), class: 'grid' }, svg); tx(svg, L - 10, y(v) + 4, v + ' %', 'tick', 'end'); });
+    [0, 2000, 4000, 6000, 8000, 10000, 12000].forEach(v => tx(svg, x(v), H - 30, v.toLocaleString('es-PE'), 'tick', 'middle'));
+    tx(svg, (L + W - R) / 2, H - 6, 'Costo mensual por horas extra', 'ttl', 'middle');
+    const ty = tx(svg, 14, (T + H - B) / 2, 'Tasa de rotación', 'ttl yt', 'middle'); ty.setAttribute('transform', `rotate(-90 14 ${(T + H - B) / 2})`);
+    const n = OVERTIME.length, mx = OVERTIME.reduce((s, p) => s + p[0], 0) / n, my = OVERTIME.reduce((s, p) => s + p[1], 0) / n;
+    let sxy = 0, sxx = 0, syy = 0; OVERTIME.forEach(([a, b]) => { sxy += (a - mx) * (b - my); sxx += (a - mx) ** 2; syy += (b - my) ** 2; });
+    const slope = sxy / sxx, icpt = my - slope * mx, r = sxy / Math.sqrt(sxx * syy);
+    const x0 = 1500, x1 = 11000;
+    const f = sv('path', { d: `M${x(x0)} ${y(icpt + slope * x0)} L${x(x1)} ${y(icpt + slope * x1)}`, class: 'fit' }, svg);
+    OVERTIME.forEach(([a, b], k) => { const c = sv('circle', { cx: x(a), cy: y(b), r: 6, class: 'pt pc' }, svg); c.style.setProperty('--i', k); sv('title', {}, c).textContent = `Horas extra: ${a.toLocaleString('es-PE')} · Rotación: ${b} %`; });
+    document.getElementById('scatter').appendChild(svg);
+    document.getElementById('rval').textContent = 'r ≈ ' + r.toFixed(2);
+  })();
+
+  /* ---------- navegación ---------- */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  const count = document.getElementById('count');
+  const nameEl = document.getElementById('slideName');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  const fsBtn = document.getElementById('fs');
+  const dotsEl = document.getElementById('dots');
+  let current = -1;
+
+  const dots = slides.map((s, i) => {
+    const b = el('button', 'dot-btn', '<span></span>');
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Ir a: ' + s.getAttribute('aria-label'));
+    b.addEventListener('click', () => go(i));
+    dotsEl.appendChild(b);
+    return b;
+  });
+
+  function go(i, updateHash = true) {
+    i = Math.max(0, Math.min(total - 1, i));
+    if (i === current) return;
+    slides.forEach((s, k) => {
+      s.classList.toggle('is-active', k === i);
+      s.classList.toggle('is-before', k < i);
+      if (k === i) s.removeAttribute('inert'); else s.setAttribute('inert', '');
+    });
+    dots.forEach((d, k) => d.classList.toggle('on', k <= i));
+    slides[i].scrollTop = 0;
+    current = i;
+    count.textContent = (i + 1) + ' / ' + total;
+    nameEl.textContent = slides[i].getAttribute('aria-label');
+    prevBtn.disabled = i === 0;
+    nextBtn.disabled = i === total - 1;
+    if (updateHash) { try { history.replaceState(null, '', '#slide-' + (i + 1)); } catch (e) {} }
+  }
+  const fromHash = () => { const m = /^#slide-(\d+)$/.exec(location.hash || ''); return m ? Number(m[1]) - 1 : 0; };
+
+  prevBtn.addEventListener('click', () => go(current - 1));
+  nextBtn.addEventListener('click', () => go(current + 1));
+  window.addEventListener('hashchange', () => go(fromHash(), false));
+
+  document.addEventListener('keydown', e => {
+    const onBtn = e.target.closest && e.target.closest('button');
+    if (['ArrowRight', 'PageDown'].includes(e.key) || (e.key === ' ' && !e.shiftKey && !onBtn)) { e.preventDefault(); go(current + 1); }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(current - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(total - 1); }
+  });
+
+  let sx = 0, sy = 0;
+  document.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(current + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  if (document.fullscreenEnabled && document.documentElement.requestFullscreen) {
+    fsBtn.hidden = false;
+    fsBtn.addEventListener('click', () => {
+      const p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+      if (p && p.catch) p.catch(() => {});
+    });
+  }
+
+  go(fromHash(), false);
+})();
+</script>
+</body>
+</html>
